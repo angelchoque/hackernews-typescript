@@ -1,4 +1,4 @@
-import { objectType, extendType } from "nexus";
+import { objectType, extendType, nonNull, stringArg, intArg } from "nexus";
 import { NexusGenObjects } from "../../nexus-typegen";
 
 // objectType is used to create a new type in your GraphQL schema
@@ -38,4 +38,88 @@ export const LinkQuery = extendType({ // extending the Query root type and addin
       }
     })
   },
+})
+
+export const LinkQueryById = extendType({
+  type: "Query",
+  definition(t) {
+    t.field("postContent", {
+      type: "Link",
+      args: {
+        id: nonNull(intArg())
+      },
+      resolve(parent, args, context) {
+        const { id } = args
+        const data: NexusGenObjects["Link"] | undefined = links.find(i => i.id === id)
+        return data ? data : null
+      }
+    })
+  },
+})
+
+export const LinkMutation = extendType({
+  type: "Mutation", // extending the Mutation type to add a new root field
+  definition(t) {
+    t.nonNull.field("post", { // The name of the mutation is defined as post and it returns a (non nullable) link object.
+      type: "Link",
+      args: { // arguments nonNull
+        description: nonNull(stringArg()),
+        url: nonNull(stringArg()),
+      },
+      resolve(parent, args, context) {
+        const { description, url } = args; // arguments created
+        
+        let idCount = links.length + 1;
+        const link = {
+          id: idCount,
+          description: description,
+          url: url,
+        };
+
+        links.push(link)
+        return link
+      }
+    })
+  },
+})
+
+export const UpdateLinkMutation = extendType({
+  type: "Mutation",
+  definition(t) {
+    t.nonNull.field("updateLink", {
+      type: "Link",
+      args: {
+        id: nonNull(intArg()),
+        description: nonNull(stringArg()),
+        url: nonNull(stringArg()),
+      },
+      resolve(parent, args, context) {
+        const { id, description, url } = args
+        const index = links.findIndex(i => i.id === id)
+        links[index] = {
+          id: id,
+          description: description,
+          url: url
+        }
+        return links[index]
+      }
+    })
+  },
+})
+
+export const DeleteLinkMutation = extendType({
+  type: "Mutation",
+  definition(t) {
+    t.nullable.int("deleteLink", {
+      args: {
+        id: nonNull(intArg())
+      },
+      resolve(parent, args, context) {
+        const { id } = args
+        const index = links.findIndex(i => i.id === id)
+        links.splice(index, 1)
+        return id
+      }
+    })
+  }
 })
