@@ -9,9 +9,12 @@ type Link {
 }
 
 type Mutation {
+  deleteLink(id: Int!): Int
   post(description: String!, url: String!): Link!
+  updateLink(description: String!, id: Int!, url: String!): Link!
 }
 
 type Query {
   feed: [Link!]!
+  postContent(id: Int!): Link
 }

@@ -1,5 +1,4 @@
 import { objectType, extendType, nonNull, stringArg, intArg } from "nexus";
-import { NexusGenObjects } from "../../nexus-typegen";
 
 // objectType is used to create a new type in your GraphQL schema
 export const Link = objectType({
@@ -30,22 +29,22 @@ export const LinkQuery = extendType({ // extending the Query root type and addin
   },
 })
 
-// export const LinkQueryById = extendType({
-//   type: "Query",
-//   definition(t) {
-//     t.field("postContent", {
-//       type: "Link",
-//       args: {
-//         id: nonNull(intArg())
-//       },
-//       resolve(parent, args, context) {
-//         const { id } = args
-//         const data: NexusGenObjects["Link"] | undefined = links.find(i => i.id === id)
-//         return data ? data : null
-//       }
-//     })
-//   },
-// })
+export const LinkQueryById = extendType({
+  type: "Query",
+  definition(t) {
+    t.field("postContent", {
+      type: "Link",
+      args: {
+        id: nonNull(intArg())
+      },
+      resolve(parent, args, context) {
+        const { id } = args
+        const linkData = context.prisma.link.findUnique({where: {id: id}})
+        return linkData
+      }
+    })
+  },
+})
 
 export const LinkMutation = extendType({
   type: "Mutation", // extending the Mutation type to add a new root field
@@ -70,43 +69,49 @@ export const LinkMutation = extendType({
   },
 })
 
-// export const UpdateLinkMutation = extendType({
-//   type: "Mutation",
-//   definition(t) {
-//     t.nonNull.field("updateLink", {
-//       type: "Link",
-//       args: {
-//         id: nonNull(intArg()),
-//         description: nonNull(stringArg()),
-//         url: nonNull(stringArg()),
-//       },
-//       resolve(parent, args, context) {
-//         const { id, description, url } = args
-//         const index = links.findIndex(i => i.id === id)
-//         links[index] = {
-//           id: id,
-//           description: description,
-//           url: url
-//         }
-//         return links[index]
-//       }
-//     })
-//   },
-// })
+export const UpdateLinkMutation = extendType({
+  type: "Mutation",
+  definition(t) {
+    t.nonNull.field("updateLink", {
+      type: "Link",
+      args: {
+        id: nonNull(intArg()),
+        description: nonNull(stringArg()),
+        url: nonNull(stringArg()),
+      },
+      resolve(parent, args, context) {
+        const { id, description, url } = args
+        const updateLink = context.prisma.link.update({
+          where: {
+            id: id,
+          },
+          data: {
+            description: description,
+            url: url,
+          },
+        })
+        return updateLink
+      }
+    })
+  },
+})
 
-// export const DeleteLinkMutation = extendType({
-//   type: "Mutation",
-//   definition(t) {
-//     t.nullable.int("deleteLink", {
-//       args: {
-//         id: nonNull(intArg())
-//       },
-//       resolve(parent, args, context) {
-//         const { id } = args
-//         const index = links.findIndex(i => i.id === id)
-//         links.splice(index, 1)
-//         return id
-//       }
-//     })
-//   }
-// })
+export const DeleteLinkMutation = extendType({
+  type: "Mutation",
+  definition(t) {
+    t.nullable.int("deleteLink", {
+      args: {
+        id: nonNull(intArg())
+      },
+      resolve(parent, args, context) {
+        const { id } = args
+        context.prisma.link.delete({
+          where: {
+            id: id
+          },
+        })
+        return id
+      }
+    })
+  }
+})
