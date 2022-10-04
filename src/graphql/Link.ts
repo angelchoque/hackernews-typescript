@@ -11,18 +11,8 @@ export const Link = objectType({
   }
 })
 
-let links: NexusGenObjects["Link"][] = [ // store runtime
-  {
-    id: 1,
-    url: "www.howtographql.com",
-    description: "Fullstack tutorial for GraphQL",
-  },
-  {
-    id: 2,
-    url: "graphql.org",
-    description: "GraphQL official website",
-  },
-];
+// Apollo Server is capable of detecting and automatically
+// resolving any Promise object that is returned from resolver functions.
 
 export const LinkQuery = extendType({ // extending the Query root type and adding a new root field to it called feed.
   type: "Query",
@@ -34,28 +24,28 @@ export const LinkQuery = extendType({ // extending the Query root type and addin
       // our resolver implementation is very simple, it just returns the links array. The resolve function has four arguments, parent, args, 
       // context and info. We will get to these later.
       resolve(parents, args, context, info) {
-        return links;
+        return context.prisma.link.findMany(); // Promise
       }
     })
   },
 })
 
-export const LinkQueryById = extendType({
-  type: "Query",
-  definition(t) {
-    t.field("postContent", {
-      type: "Link",
-      args: {
-        id: nonNull(intArg())
-      },
-      resolve(parent, args, context) {
-        const { id } = args
-        const data: NexusGenObjects["Link"] | undefined = links.find(i => i.id === id)
-        return data ? data : null
-      }
-    })
-  },
-})
+// export const LinkQueryById = extendType({
+//   type: "Query",
+//   definition(t) {
+//     t.field("postContent", {
+//       type: "Link",
+//       args: {
+//         id: nonNull(intArg())
+//       },
+//       resolve(parent, args, context) {
+//         const { id } = args
+//         const data: NexusGenObjects["Link"] | undefined = links.find(i => i.id === id)
+//         return data ? data : null
+//       }
+//     })
+//   },
+// })
 
 export const LinkMutation = extendType({
   type: "Mutation", // extending the Mutation type to add a new root field
@@ -68,58 +58,55 @@ export const LinkMutation = extendType({
       },
       resolve(parent, args, context) {
         const { description, url } = args; // arguments created
-        
-        let idCount = links.length + 1;
-        const link = {
-          id: idCount,
-          description: description,
-          url: url,
-        };
-
-        links.push(link)
-        return link
+        const newLink = context.prisma.link.create({
+          data: {
+            description: description,
+            url: url,
+          }
+        })
+        return newLink;
       }
     })
   },
 })
 
-export const UpdateLinkMutation = extendType({
-  type: "Mutation",
-  definition(t) {
-    t.nonNull.field("updateLink", {
-      type: "Link",
-      args: {
-        id: nonNull(intArg()),
-        description: nonNull(stringArg()),
-        url: nonNull(stringArg()),
-      },
-      resolve(parent, args, context) {
-        const { id, description, url } = args
-        const index = links.findIndex(i => i.id === id)
-        links[index] = {
-          id: id,
-          description: description,
-          url: url
-        }
-        return links[index]
-      }
-    })
-  },
-})
+// export const UpdateLinkMutation = extendType({
+//   type: "Mutation",
+//   definition(t) {
+//     t.nonNull.field("updateLink", {
+//       type: "Link",
+//       args: {
+//         id: nonNull(intArg()),
+//         description: nonNull(stringArg()),
+//         url: nonNull(stringArg()),
+//       },
+//       resolve(parent, args, context) {
+//         const { id, description, url } = args
+//         const index = links.findIndex(i => i.id === id)
+//         links[index] = {
+//           id: id,
+//           description: description,
+//           url: url
+//         }
+//         return links[index]
+//       }
+//     })
+//   },
+// })
 
-export const DeleteLinkMutation = extendType({
-  type: "Mutation",
-  definition(t) {
-    t.nullable.int("deleteLink", {
-      args: {
-        id: nonNull(intArg())
-      },
-      resolve(parent, args, context) {
-        const { id } = args
-        const index = links.findIndex(i => i.id === id)
-        links.splice(index, 1)
-        return id
-      }
-    })
-  }
-})
+// export const DeleteLinkMutation = extendType({
+//   type: "Mutation",
+//   definition(t) {
+//     t.nullable.int("deleteLink", {
+//       args: {
+//         id: nonNull(intArg())
+//       },
+//       resolve(parent, args, context) {
+//         const { id } = args
+//         const index = links.findIndex(i => i.id === id)
+//         links.splice(index, 1)
+//         return id
+//       }
+//     })
+//   }
+// })
